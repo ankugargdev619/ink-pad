@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "ink-pad",
   "private": true,
   "scripts": {
     "build": "turbo run build",
