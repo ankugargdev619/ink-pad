@@ -19,6 +19,7 @@ model User {
   firstName  String
   lastName   String
   password   String
+  resetToken String
   profile    String?
   notes      Note[]
   colorTheme Theme     @default(SYSTEM)
