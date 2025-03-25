@@ -6,12 +6,14 @@ import {
     setProfileController,
     resetLinkController,
     updatePassController
-} from "../controller/userController";
-import { checkAuth, isTokenValid } from "../middleware";
+} from "../controller/userController.js";
+
+import { checkAuth, isTokenValid, validateSchema } from "../middleware.js";
+import { registerSchema } from "../validators/userValidator.js";
 
 const userRouter = Router();
 
-userRouter.post("/register", registerController);
+userRouter.post("/register", validateSchema(registerSchema), registerController);
 userRouter.post("/authenticate", authController);
 
 userRouter.get("/:id", checkAuth, getProfileController);
@@ -20,4 +22,4 @@ userRouter.post("/:id", checkAuth, setProfileController);
 userRouter.post("/reset-pass-link", resetLinkController)
 userRouter.post("/update-password", isTokenValid, updatePassController)
 
-export { userRouter };
+export default userRouter;

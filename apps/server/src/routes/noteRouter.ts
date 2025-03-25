@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { checkAuth, hasNoteAccess } from "../middleware";
-import { assignTagController, createNoteController, deleteNoteController, getNoteController, getNoteListController, removeTagController, updateNoteController } from "../controller/noteController";
+import { checkAuth, hasNoteAccess } from "../middleware.js";
+import { assignTagController, createNoteController, deleteNoteController, getNoteController, getNoteListController, removeTagController, updateNoteController } from "../controller/noteController.js";
 
 const noteRouter = Router();
 
@@ -12,4 +12,4 @@ noteRouter.delete("/:id", checkAuth, hasNoteAccess, deleteNoteController);
 noteRouter.post("/:id/tags", checkAuth, hasNoteAccess, assignTagController);
 noteRouter.delete("/:id/tags/:tagId", checkAuth, hasNoteAccess, removeTagController);
 
-export { noteRouter };
+export default noteRouter;

@@ -1,7 +1,9 @@
 import { Request, Response } from "express"
 
 const registerController = (req: Request, res: Response) => {
-
+    const { email, password } = req.body;
+    console.log(email);
+    console.log(password);
     res.json({ message: "Register" });
 }
 

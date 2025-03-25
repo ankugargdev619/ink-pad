@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { ZodIssue, ZodType } from "zod";
 
-// checkAuth : Checks if the user is authenticated
 const checkAuth = (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.token;
     try {
@@ -11,7 +11,26 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
     next();
 }
 
-// hasNoteAccess : Check if the user has access to the note
+const validateSchema = (schema: ZodType) => {
+    return function (req: Request, res: Response, next: NextFunction): void {
+        const result = schema.safeParse(req.body);
+        if (!result.success) {
+            const error = Object.entries(result.error.format());
+            const formattedError = error.map((key, value) => {
+                if (key[0] != "_errors") {
+                    return {
+                        field: key[0],
+                        message: key[1]
+                    }
+                }
+            })
+            res.status(400).json(formattedError)
+        } else {
+            next();
+        }
+    }
+}
+
 const hasNoteAccess = (req: Request, res: Response, next: NextFunction) => {
     //TODO : Verify if the user has access to certain note
     next();
@@ -32,5 +51,6 @@ export {
     checkAuth,
     hasNoteAccess,
     hasTagAccess,
-    isTokenValid
+    isTokenValid,
+    validateSchema
 }

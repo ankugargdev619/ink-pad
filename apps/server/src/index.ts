@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 // Import routers
-import { userRouter } from "./routes/userRouter"
-import { noteRouter } from "./routes/noteRouter";
-import { tagRouter } from "./routes/tagRouter";
+import userRouter from "./routes/userRouter.js"
+import noteRouter from "./routes/noteRouter.js";
+import tagRouter from "./routes/tagRouter.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -15,8 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/v1/users", userRouter);
-app.use("api/v1/notes",noteRouter);
-app.use("/ap1/v1/tag",tagRouter);
+app.use("api/v1/notes", noteRouter);
+app.use("/ap1/v1/tag", tagRouter);
 
 // Test Route
 app.get("/health-check", (req, res) => {
