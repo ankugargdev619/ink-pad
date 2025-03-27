@@ -11,7 +11,7 @@ import {
 import { checkAuth, isTokenValid, validateSchema } from "../middleware.js";
 import { registerSchema } from "../validators/userValidator.js";
 
-const userRouter = Router();
+const userRouter: Router = Router();
 
 userRouter.post("/register", validateSchema(registerSchema), registerController);
 userRouter.post("/authenticate", authController);

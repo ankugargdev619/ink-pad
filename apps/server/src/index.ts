@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 // Import routers
-import userRouter from "./routes/userRouter.js"
-import noteRouter from "./routes/noteRouter.js";
-import tagRouter from "./routes/tagRouter.js";
+import userRouter from "./api/v1/routes/userRouter.js";
+import noteRouter from "./api/v1/routes/noteRouter.js";
+import tagRouter from "./api/v1/routes/tagRouter.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;

@@ -2,16 +2,17 @@
   "name": "server",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "npx tsc && tsc -b",
     "start": "node dist/index.js",
-    "dev": "tsc -b && node dist/index.js"
+    "dev": "pnpm run build && node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@repo/db": "workspace:*",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -19,12 +20,12 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@repo/db": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
-    "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.13.10",
     "typescript": "^5.8.2"
   }
 }

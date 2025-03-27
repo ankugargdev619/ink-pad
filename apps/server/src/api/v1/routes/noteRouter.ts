@@ -2,7 +2,7 @@ import { Router } from "express";
 import { checkAuth, hasNoteAccess } from "../middleware.js";
 import { assignTagController, createNoteController, deleteNoteController, getNoteController, getNoteListController, removeTagController, updateNoteController } from "../controller/noteController.js";
 
-const noteRouter = Router();
+const noteRouter: Router = Router();
 
 noteRouter.post("/create", checkAuth, createNoteController);
 noteRouter.get("/:id", checkAuth, hasNoteAccess, getNoteController);
