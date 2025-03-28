@@ -1,23 +1,19 @@
 import { Request, Response } from "express";
-import { client } from "@repo/db/client";
+import { prisma } from "@repo/db";
 import bcrypt from "bcrypt";
 
 const SALT_ROUNDS = 5;
 
 const registerController = async (req: Request, res: Response) => {
-    const body = req.body;
-    const email: string = body.email;
-    const password: string = body.password;
-    const firstName: string = body.firstName;
-    const lastName: string = body.lastName;
+    const { email, password, firstName, lastName } = req.body;
     // check if user already exists
 
-    const user = await client.user.findFirst({
+    const user = await prisma.user.findFirst({
         where: {
             email
         }
     });
-    
+
     if (user) {
         res.json({
             message: "User is already registered!"
@@ -33,7 +29,7 @@ const registerController = async (req: Request, res: Response) => {
                 })
             } else {
                 // Create an account
-                const user = await client.user.create({
+                const user = await prisma.user.create({
                     data: {
                         email,
                         firstName,
