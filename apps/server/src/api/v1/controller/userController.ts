@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import { prisma } from "@repo/db";
+import { prisma } from "@repo/db/client";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { SALT_ROUNDS, JWT_PASS } from "@repo/common/secrets";
 
-const SALT_ROUNDS = 5;
-
+// /users/register
 const registerController = async (req: Request, res: Response) => {
     const { email, password, firstName, lastName } = req.body;
     // check if user already exists
@@ -15,8 +16,8 @@ const registerController = async (req: Request, res: Response) => {
     });
 
     if (user) {
-        res.json({
-            message: "User is already registered!"
+        res.status(400).json({
+            error: "User is already registered!"
         })
     } else {
         // Hash the password
@@ -25,7 +26,7 @@ const registerController = async (req: Request, res: Response) => {
                 console.log(`Error hashing password`)
                 console.error(err);
                 res.status(400).json({
-                    message: "Error creating account!"
+                    error: "Error creating account!"
                 })
             } else {
                 // Create an account
@@ -52,21 +53,62 @@ const registerController = async (req: Request, res: Response) => {
     }
 }
 
-const authController = (req: Request, res: Response) => {
+// /users/authenticate
+const authController = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                email
+            },
+            select: {
+                email: true,
+                password: true
+            }
+        });
 
-    res.json({ message: "Authenticate" });
+        if (user) {
+            const validPass = await bcrypt.compare(password, user.password);
+            if (!validPass) {
+                res.status(401).json({
+                    error: "Incorrect password, please check!"
+                })
+            } else {
+                const token = jwt.sign({
+                    email: user.email
+                }, JWT_PASS)
+
+                res.json({
+                    message: "Login successful!",
+                    token
+                });
+            }
+        } else {
+            res.status(404).json({
+                error: "Account not found"
+            })
+        }
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            error: "Something went wrong!"
+        })
+    }
 }
 
+// /users/:userId
 const getProfileController = (req: Request, res: Response) => {
 
     res.json({ message: "Profile Details" });
 }
 
+// /users/:userId
 const setProfileController = (req: Request, res: Response) => {
 
     res.json({ message: "Profile Details" });
 }
 
+// /users/:userId
 const resetLinkController = (req: Request, res: Response) => {
 
     // TODO implement sending email with the link

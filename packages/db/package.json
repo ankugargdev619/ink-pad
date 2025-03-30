@@ -1,8 +1,10 @@
 {
   "name": "@repo/db",
   "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
   "exports": {
-    ".": "./src/index.ts"
+    "./client": "./src/index.ts"
   },
   "scripts": {
     "db:generate": "prisma generate",
