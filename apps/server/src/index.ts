@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { SERVER_PORT } from "@repo/common/secrets";
 const app = express();
 
@@ -12,7 +11,7 @@ import tagRouter from "./api/v1/routes/tagRouter.js";
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/v1/users", userRouter);
+app.use("/api/v1/user", userRouter);
 app.use("api/v1/notes", noteRouter);
 app.use("/ap1/v1/tag", tagRouter);
 

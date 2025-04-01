@@ -28,7 +28,7 @@ const registerSchema = z.object({
     lastName: VALIDATIONS.validName,
     email: VALIDATIONS.validEmail,
     password: VALIDATIONS.validPassword
-});
+}).strict();
 
 const authenticateSchema = z.object({
     email: VALIDATIONS.validEmail,
@@ -36,25 +36,25 @@ const authenticateSchema = z.object({
         required_error: "Password is required",
         invalid_type_error: "Password must be a string"
     })
-});
+}).strict();
 
 const profileSchema = z.object({
     firstName: VALIDATIONS.validName.optional(),
     lastName: VALIDATIONS.validName.optional(),
     password: VALIDATIONS.validPassword.optional(),
-    profileUrl: z.string({ invalid_type_error: "profileUrl must be a string" }).optional(),
-    colorTheme: VALIDATIONS.validColorTheme,
-    fontTheme: VALIDATIONS.validFontTheme
-});
+    profile: z.string({ invalid_type_error: "profileUrl must be a string" }).optional(),
+    colorTheme: VALIDATIONS.validColorTheme.optional(),
+    fontTheme: VALIDATIONS.validFontTheme.optional()
+}).strict();
 
 const resetPassSchema = z.object({
     email: VALIDATIONS.validEmail
-})
+}).strict();
 
 const updatePasswordSchema = z.object({
     email: VALIDATIONS.validEmail,
     password: VALIDATIONS.validPassword
-})
+}).strict();
 
 export {
     registerSchema,

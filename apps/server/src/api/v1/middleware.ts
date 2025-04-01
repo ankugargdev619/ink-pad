@@ -1,14 +1,51 @@
+import { JWT_PASS } from "@repo/common/secrets";
+import { error } from "console";
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { ZodIssue, ZodType } from "zod";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { ZodType } from "zod";
+
+declare global {
+    namespace Express {
+        interface Request {
+            userId?: number
+        }
+    }
+}
 
 const checkAuth = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.token;
-    try {
-    } catch (error) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
+    if (token == null) {
+        res.status(403).json({
+            error: "Please provide authorization token"
+        })
+        return
     }
-    next();
+
+    try {
+        const decoded = jwt.verify(token, JWT_PASS as string) as JwtPayload
+        const expTime = decoded?.exp;
+        const currentTime = Date.now() / 1000;
+
+        // Check if the token has expired
+        if (expTime as number < currentTime) {
+            console.log("Authorization token has expired");
+            res.status(401).json({
+                error: "Authorization token has expired"
+            })
+        } else {
+            console.log(decoded?.userId);
+            req.userId = decoded?.userId;
+            next();
+        }
+
+    } catch (e) {
+        console.error(e);
+        res.status(401).json({
+            error: "Invalid authorization token"
+        })
+    }
 }
 
 const validateSchema = (schema: ZodType) => {
@@ -16,15 +53,7 @@ const validateSchema = (schema: ZodType) => {
         const result = schema.safeParse(req.body);
         if (!result.success) {
             const error = Object.entries(result.error.format());
-            const formattedError = error.map((key, value) => {
-                if (key[0] != "_errors") {
-                    return {
-                        field: key[0],
-                        message: key[1]
-                    }
-                }
-            })
-            res.status(400).json(formattedError)
+            res.status(400).json(error);
         } else {
             next();
         }

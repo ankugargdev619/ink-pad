@@ -3,6 +3,7 @@ import { prisma } from "@repo/db/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { SALT_ROUNDS, JWT_PASS } from "@repo/common/secrets";
+import { userInfo } from "os";
 
 // /users/register
 const registerController = async (req: Request, res: Response) => {
@@ -62,6 +63,7 @@ const authController = async (req: Request, res: Response) => {
                 email
             },
             select: {
+                id: true,
                 email: true,
                 password: true
             }
@@ -75,11 +77,15 @@ const authController = async (req: Request, res: Response) => {
                 })
             } else {
                 const token = jwt.sign({
-                    email: user.email
-                }, JWT_PASS)
+                    userId: user.id
+                }, JWT_PASS as string,
+                    {
+                        expiresIn: 3600
+                    })
 
                 res.json({
                     message: "Login successful!",
+                    id: user.id,
                     token
                 });
             }
@@ -96,25 +102,70 @@ const authController = async (req: Request, res: Response) => {
     }
 }
 
-// /users/:userId
-const getProfileController = (req: Request, res: Response) => {
-
-    res.json({ message: "Profile Details" });
+// /user/profile
+const getProfileController = async (req: Request, res: Response) => {
+    const userId = req?.userId;
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                id: userId
+            },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                profile: true,
+                colorTheme: true,
+                fontTheme: true
+            }
+        });
+        res.json({
+            ...user
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            error: "Something went wrong"
+        })
+    }
 }
 
-// /users/:userId
-const setProfileController = (req: Request, res: Response) => {
+// /user/profile
+const setProfileController = async (req: Request, res: Response) => {
+    const body = req.body;
 
-    res.json({ message: "Profile Details" });
+    // Update the data
+    try {
+        const user = await prisma.user.update({
+            where: {
+                id: req?.userId
+            },
+            data: body,
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                profile: true,
+                colorTheme: true,
+                fontTheme: true
+            }
+        });
+        res.json({ ...user });
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({ error: "Error updating profile" });
+    }
 }
 
-// /users/:userId
+// /user/:userId
 const resetLinkController = (req: Request, res: Response) => {
-
     // TODO implement sending email with the link
     res.json({ message: "Reset link" });
 }
 
+// /update-password
 const updatePassController = (req: Request, res: Response) => {
     res.json({ message: "Update Password" });
 }
