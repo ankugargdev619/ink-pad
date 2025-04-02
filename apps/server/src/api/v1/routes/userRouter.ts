@@ -21,6 +21,6 @@ userRouter
     .post("/profile", validateSchema(profileSchema), checkAuth, setProfileController);
 
 userRouter.post("/reset-pass-link", resetLinkController)
-userRouter.post("/update-password", isTokenValid, updatePassController)
+userRouter.post("/update-password/:tokenId", isTokenValid, updatePassController)
 
 export default userRouter;

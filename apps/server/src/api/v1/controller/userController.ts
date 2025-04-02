@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { prisma } from "@repo/db/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { SALT_ROUNDS, JWT_PASS } from "@repo/common/secrets";
-import { userInfo } from "os";
+import { log } from "console";
 
 // /users/register
 const registerController = async (req: Request, res: Response) => {
@@ -22,7 +23,7 @@ const registerController = async (req: Request, res: Response) => {
         })
     } else {
         // Hash the password
-        bcrypt.hash(password, SALT_ROUNDS, async (err, hash) => {
+        bcrypt.hash(password, 5, async (err, hash) => {
             if (err) {
                 console.log(`Error hashing password`)
                 console.error(err);
@@ -159,15 +160,114 @@ const setProfileController = async (req: Request, res: Response) => {
     }
 }
 
-// /user/:userId
-const resetLinkController = (req: Request, res: Response) => {
-    // TODO implement sending email with the link
-    res.json({ message: "Reset link" });
+// /reset-password
+const resetLinkController = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+        if (!user) {
+            res.status(401).json({
+                error: "You are not registered"
+            })
+            return;
+        }
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        const expiresAt = Date.now() + (15 * 60 * 1000);
+
+        const userToken = await prisma.user.update({
+            where: {
+                email: email
+            },
+            data: {
+                resetToken: resetToken,
+                expiresAt: new Date(expiresAt)
+            },
+            select: {
+                resetToken: true
+            }
+        })
+        // TODO, send password with link to email
+
+        res.json({
+            message: "Reset password token is generated!",
+            resetToken: userToken.resetToken
+        })
+        return
+
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            error: "Error generating reset link"
+        })
+        return
+    }
+
 }
 
-// /update-password
-const updatePassController = (req: Request, res: Response) => {
-    res.json({ message: "Update Password" });
+// /update-password/:resetToken
+const updatePassController = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const resetToken = req.params.tokenId;
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email: email
+        },
+        select: {
+            resetToken: true,
+            expiresAt: true
+        }
+    })
+
+    if (!user || !user.resetToken || !user.expiresAt) {
+        res.status(404).json({
+            error: "Invalid token, please generate a new token"
+        })
+        return
+    }
+
+    if (Date.now() > user.expiresAt.getTime()) {
+        res.status(403).json({
+            error: "Link expired, please try again later"
+        })
+        return
+    }
+
+    if (resetToken != user.resetToken) {
+        res.status(403).json({
+            error: "Inavlid token, please try generating new token"
+        })
+        return
+    }
+
+    console.log(SALT_ROUNDS, password);
+    try {
+        const hashPass = await bcrypt.hash(password, 5);
+        const updatedUser = await prisma.user.update({
+            where: {
+                email: email
+            },
+            data: {
+                password: hashPass,
+                expiresAt: new Date(Date.now())  // User should not be able to use same token twice
+            }
+        })
+
+        res.json({
+            message: "Password updated successfully!"
+        })
+        return
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            message: "Error updating password!"
+        })
+        return
+    }
 }
 
 export {

@@ -14,6 +14,7 @@ model User {
   lastName   String
   password   String
   resetToken String?
+  expiresAt  DateTime? @unique
   profile    String?
   notes      Note[]
   colorTheme Theme     @default(SYSTEM)
