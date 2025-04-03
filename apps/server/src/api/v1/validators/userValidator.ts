@@ -19,7 +19,11 @@ const VALIDATIONS = {
         invalid_type_error: "Must be a string"
     }).min(2, "Must have atleast 2 characters"),
     validColorTheme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
-    validFontTheme: z.enum(["INTER", "NOTO", "SOURCE"])
+    validFontTheme: z.enum(["INTER", "NOTO", "SOURCE"]),
+    validOtp: z.string({
+        required_error: "This is required field",
+        invalid_type_error: "Must be a string"
+    }).length(6)
 }
 
 
@@ -41,7 +45,6 @@ const authenticateSchema = z.object({
 const profileSchema = z.object({
     firstName: VALIDATIONS.validName.optional(),
     lastName: VALIDATIONS.validName.optional(),
-    password: VALIDATIONS.validPassword.optional(),
     profile: z.string({ invalid_type_error: "profileUrl must be a string" }).optional(),
     colorTheme: VALIDATIONS.validColorTheme.optional(),
     fontTheme: VALIDATIONS.validFontTheme.optional()
@@ -56,10 +59,21 @@ const updatePasswordSchema = z.object({
     password: VALIDATIONS.validPassword
 }).strict();
 
+const generateOtpSchema = z.object({
+    email: VALIDATIONS.validEmail
+})
+
+const verifyOtpSchema = z.object({
+    email: VALIDATIONS.validEmail,
+    otp: VALIDATIONS.validOtp
+})
+
 export {
     registerSchema,
     authenticateSchema,
     profileSchema,
     resetPassSchema,
-    updatePasswordSchema
+    updatePasswordSchema,
+    generateOtpSchema,
+    verifyOtpSchema
 }

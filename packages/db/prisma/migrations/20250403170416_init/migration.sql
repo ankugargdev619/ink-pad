@@ -12,6 +12,7 @@ CREATE TABLE "User" (
     "lastName" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "resetToken" TEXT,
+    "expiresAt" TIMESTAMP(3),
     "profile" TEXT,
     "colorTheme" "Theme" NOT NULL DEFAULT 'SYSTEM',
     "fontTheme" "FontTheme" NOT NULL DEFAULT 'INTER',
@@ -23,8 +24,9 @@ CREATE TABLE "User" (
 CREATE TABLE "Otp" (
     "id" SERIAL NOT NULL,
     "otp" CHAR(6) NOT NULL,
+    "email" TEXT NOT NULL,
+    "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Otp_pkey" PRIMARY KEY ("id")
 );
@@ -61,8 +63,11 @@ CREATE TABLE "TagsOnNotes" (
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
--- AddForeignKey
-ALTER TABLE "Otp" ADD CONSTRAINT "Otp_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "User_expiresAt_key" ON "User"("expiresAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Otp_email_key" ON "Otp"("email");
 
 -- AddForeignKey
 ALTER TABLE "Note" ADD CONSTRAINT "Note_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

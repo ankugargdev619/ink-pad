@@ -270,11 +270,82 @@ const updatePassController = async (req: Request, res: Response) => {
     }
 }
 
+// 
+const generateOtpController = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    try {
+        const otpEntry = await prisma.otp.findUnique({
+            where: {
+                email: email
+            },
+            select: {
+                otp: true,
+                isVerified: true
+            }
+        })
+
+        const otp = crypto.randomInt(100000, 1000000)
+
+        if (otpEntry) {
+            if (otpEntry?.isVerified) {
+                res.status(403).json({
+                    error: "Email is already verified"
+                })
+                return
+            } else {
+                await prisma.otp.update({
+                    where: {
+                        email: email
+                    },
+                    data: {
+                        otp: otp
+                    }
+                })
+            }
+        } else {
+            await prisma.otp.create({
+                data: {
+                    email: email,
+                    otp: otp
+                }
+            })
+        }
+
+        // TODO : Send OTP email
+
+
+        res.json({
+            message: "OTP has been generated!"
+            // otp: otp
+        })
+        return
+
+
+    } catch (e) {
+        console.error("Error generating otp")
+        console.error(e);
+        res.status(400).json({
+            error: "Error generating Otp, please try again"
+        })
+        return
+    }
+}
+
+const verifyOtpController = async (req: Request, res: Response) => {
+
+    res.json({
+        message: "OTP verified"
+    })
+}
+
+
 export {
     registerController,
     authController,
     getProfileController,
     setProfileController,
     resetLinkController,
-    updatePassController
+    updatePassController,
+    generateOtpController,
+    verifyOtpController
 }
