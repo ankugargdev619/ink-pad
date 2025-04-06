@@ -1,17 +1,8 @@
 import { Router } from "express";
-import {
-    registerController,
-    authController,
-    getProfileController,
-    setProfileController,
-    resetLinkController,
-    updatePassController,
-    generateOtpController,
-    verifyOtpController
-} from "../controller/userController.js";
 
 import { checkAuth, isTokenValid, validateSchema } from "../middleware.js";
-import { authenticateSchema, generateOtpSchema, profileSchema, registerSchema, resetPassSchema, updatePasswordSchema, verifyOtpSchema } from "../validators/userValidator.js";
+import { authenticateSchema, generateOtpSchema, profileSchema, registerSchema, resetPassSchema, updatePasswordSchema } from "../validators/userValidator.js";
+import { authController, generateOtpController, getProfileController, registerController, resetLinkController, setProfileController, updatePassController } from "../controller/userController.js";
 
 const userRouter: Router = Router();
 
@@ -26,6 +17,5 @@ userRouter.post("/reset-pass-link", validateSchema(resetPassSchema), resetLinkCo
 userRouter.post("/update-password/:tokenId", validateSchema(updatePasswordSchema), isTokenValid, updatePassController)
 
 userRouter.post("/generate-otp", validateSchema(generateOtpSchema), generateOtpController);
-userRouter.post("/verify-otp", validateSchema(verifyOtpSchema), verifyOtpController);
 
 export default userRouter;

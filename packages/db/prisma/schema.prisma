@@ -22,11 +22,10 @@ model User {
 }
 
 model Otp {
-    id         Int      @id @default(autoincrement())
-    otp        Int
-    email      String   @unique
-    isVerified Boolean? @default(false)
-    updatedAt  DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    otp       Int
+    email     String   @unique
+    updatedAt DateTime @updatedAt
 }
 
 model Note {

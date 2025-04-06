@@ -8,50 +8,83 @@ import { log } from "console";
 
 // /users/register
 const registerController = async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName } = req.body;
-    // check if user already exists
 
-    const user = await prisma.user.findFirst({
-        where: {
-            email
-        }
-    });
-
-    if (user) {
-        res.status(400).json({
-            error: "User is already registered!"
-        })
-    } else {
-        // Hash the password
-        bcrypt.hash(password, 5, async (err, hash) => {
-            if (err) {
-                console.log(`Error hashing password`)
-                console.error(err);
-                res.status(400).json({
-                    error: "Error creating account!"
-                })
-            } else {
-                // Create an account
-                const user = await prisma.user.create({
-                    data: {
-                        email,
-                        firstName,
-                        lastName,
-                        password: hash
-                    },
-                    select: {
-                        email: true,
-                        firstName: true,
-                        lastName: true
-                    }
-                });
-
-                res.json({
-                    message: "User is registered successfully!",
-                    user
-                })
+    const { email, otp, password, firstName, lastName } = req.body;
+    try {
+        // check if user already exists
+        const user = await prisma.user.findFirst({
+            where: {
+                email
             }
+        });
+
+        if (user) {
+            res.status(400).json({
+                error: "User is already registered!"
+            })
+            return
+        }
+
+        // Verify the OTP
+        const savedOtp = await prisma.otp.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        // Return error if OTP is incorrect
+        if (otp != savedOtp?.otp) {
+            res.status(404).json({
+                error: "Incorrect OTP"
+            })
+            return
+        }
+
+        // check if the otp has expired
+        if (!savedOtp?.updatedAt) {
+            res.status(400).json({
+                error: "Error validating the OTP, please generate a new OTP"
+            })
+            return
+        }
+
+        const otpValidity = savedOtp?.updatedAt.getTime() + (15 * 60 * 1000);
+        const now = new Date().getTime();
+
+        if (otpValidity < now) {
+            res.status(403).json({
+                error: "OTP has expired!"
+            })
+            return
+        }
+
+        // Hash the password
+        const hashPass = await bcrypt.hash(password, SALT_ROUNDS);
+        // Create an account
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                firstName,
+                lastName,
+                password: hashPass
+            },
+            select: {
+                email: true,
+                firstName: true,
+                lastName: true
+            }
+        });
+
+        res.json({
+            message: "User is registered successfully!",
+            user
         })
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            error: "Error registering user"
+        })
+        return
     }
 }
 
@@ -213,40 +246,39 @@ const updatePassController = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const resetToken = req.params.tokenId;
 
-    const user = await prisma.user.findUnique({
-        where: {
-            email: email
-        },
-        select: {
-            resetToken: true,
-            expiresAt: true
-        }
-    })
-
-    if (!user || !user.resetToken || !user.expiresAt) {
-        res.status(404).json({
-            error: "Invalid token, please generate a new token"
-        })
-        return
-    }
-
-    if (Date.now() > user.expiresAt.getTime()) {
-        res.status(403).json({
-            error: "Link expired, please try again later"
-        })
-        return
-    }
-
-    if (resetToken != user.resetToken) {
-        res.status(403).json({
-            error: "Inavlid token, please try generating new token"
-        })
-        return
-    }
-
-    console.log(SALT_ROUNDS, password);
     try {
-        const hashPass = await bcrypt.hash(password, 5);
+        const user = await prisma.user.findUnique({
+            where: {
+                email: email
+            },
+            select: {
+                resetToken: true,
+                expiresAt: true
+            }
+        })
+
+        if (!user || !user.resetToken || !user.expiresAt) {
+            res.status(404).json({
+                error: "Invalid token, please generate a new token"
+            })
+            return
+        }
+
+        if (Date.now() > user.expiresAt.getTime()) {
+            res.status(403).json({
+                error: "Link expired, please try again later"
+            })
+            return
+        }
+
+        if (resetToken != user.resetToken) {
+            res.status(403).json({
+                error: "Inavlid token, please try generating new token"
+            })
+            return
+        }
+
+        const hashPass = await bcrypt.hash(password, SALT_ROUNDS);
         const updatedUser = await prisma.user.update({
             where: {
                 email: email
@@ -261,6 +293,7 @@ const updatePassController = async (req: Request, res: Response) => {
             message: "Password updated successfully!"
         })
         return
+
     } catch (e) {
         console.error(e);
         res.status(400).json({
@@ -279,34 +312,26 @@ const generateOtpController = async (req: Request, res: Response) => {
                 email: email
             },
             select: {
-                otp: true,
-                isVerified: true
+                otp: true
             }
         })
 
         const otp = crypto.randomInt(100000, 1000000)
 
         if (otpEntry) {
-            if (otpEntry?.isVerified) {
-                res.status(403).json({
-                    error: "Email is already verified"
-                })
-                return
-            } else {
-                await prisma.otp.update({
-                    where: {
-                        email: email
-                    },
-                    data: {
-                        otp: otp
-                    }
-                })
-            }
+            await prisma.otp.update({
+                where: {
+                    email
+                },
+                data: {
+                    otp
+                }
+            })
         } else {
             await prisma.otp.create({
                 data: {
-                    email: email,
-                    otp: otp
+                    email,
+                    otp
                 }
             })
         }
@@ -315,8 +340,8 @@ const generateOtpController = async (req: Request, res: Response) => {
 
 
         res.json({
-            message: "OTP has been generated!"
-            // otp: otp
+            message: "OTP has been generated!",
+            otp
         })
         return
 
@@ -331,13 +356,6 @@ const generateOtpController = async (req: Request, res: Response) => {
     }
 }
 
-const verifyOtpController = async (req: Request, res: Response) => {
-
-    res.json({
-        message: "OTP verified"
-    })
-}
-
 
 export {
     registerController,
@@ -346,6 +364,5 @@ export {
     setProfileController,
     resetLinkController,
     updatePassController,
-    generateOtpController,
-    verifyOtpController
+    generateOtpController
 }

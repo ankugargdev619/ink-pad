@@ -1,4 +1,5 @@
 import { JWT_PASS } from "@repo/common/secrets";
+import { prisma } from "@repo/db/client";
 import { error } from "console";
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
@@ -60,12 +61,52 @@ const validateSchema = (schema: ZodType) => {
     }
 }
 
-const hasNoteAccess = (req: Request, res: Response, next: NextFunction) => {
+const hasNoteAccess = async (req: Request, res: Response, next: NextFunction) => {
     //TODO : Verify if the user has access to certain note
-    next();
+    const noteId = Number(req.params);
+    const userId = Number(req?.userId);
+    try {
+        const note = await prisma.note.findUnique({
+            where: {
+                id: noteId
+            }
+        });
+
+        if (note?.ownerId != userId) {
+            res.status(403).json({
+                error: "You don't have access to this note"
+            })
+            return
+        }
+
+        next();
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            error: "Error loading note"
+        })
+    }
 }
 
-const hasTagAccess = (req: Request, res: Response, next: NextFunction) => {
+const hasTagAccess = async (req: Request, res: Response, next: NextFunction) => {
+    const tagId = Number(req.params);
+    const userId = Number(req.userId);
+
+    try {
+        const tag = prisma.tag.findUnique({
+            where: {
+                id: tagId
+            }
+        });
+
+        console.log(tag);
+        next();
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({
+            error: "Error loading tag details"
+        })
+    }
     // TODO : Verify if the user has access to the tag
     next();
 }

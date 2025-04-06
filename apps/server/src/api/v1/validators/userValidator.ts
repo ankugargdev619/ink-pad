@@ -31,7 +31,8 @@ const registerSchema = z.object({
     firstName: VALIDATIONS.validName,
     lastName: VALIDATIONS.validName,
     email: VALIDATIONS.validEmail,
-    password: VALIDATIONS.validPassword
+    password: VALIDATIONS.validPassword,
+    otp: VALIDATIONS.validOtp
 }).strict();
 
 const authenticateSchema = z.object({
@@ -63,10 +64,6 @@ const generateOtpSchema = z.object({
     email: VALIDATIONS.validEmail
 })
 
-const verifyOtpSchema = z.object({
-    email: VALIDATIONS.validEmail,
-    otp: VALIDATIONS.validOtp
-})
 
 export {
     registerSchema,
@@ -74,6 +71,5 @@ export {
     profileSchema,
     resetPassSchema,
     updatePasswordSchema,
-    generateOtpSchema,
-    verifyOtpSchema
+    generateOtpSchema
 }
